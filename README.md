@@ -46,4 +46,4 @@ npm test -- --safari
 * The `static` folder contains any files that you want copied as-is into the final build. It contains an `index.html` file which loads the `index.js` file.
 
 * The `tests` folder contains your Rust unit tests.
-# rust_wasm_pixed_editor
+# rust_wasm_pixel_editor
