@@ -3,18 +3,24 @@
   <head>
     <meta charset="UTF-8">
     <title>My Rust + Webpack project!</title>
+    <link rel="stylesheet" href="./index.css">
   </head>
   <body>
     <canvas id="my-canvas" width="901px" height="901px"></canvas>
     <div>
-      <button id="red">Red</button>
-      <button id="green">Green</button>
-      <button id="blue">Blue</button>  
+      <button id="red" class="btn-color-red">Red</button>
+      <button id="blue" class="btn-color-blue">Blue</button>
+      <button id="green" class="btn-color-green">Green</button>
+      <button id="orange" class="btn-color-orange">Orange</button>
+      <button id="black" class="btn-color-black">Black</button>
+      <button id="white" class="btn-color-white">White</button>
     </div>
     <br>
     <div>
       <button id="undo">Undo</button>
       <button id="redo">Redo</button>
+      <button id="eraser">Eraser</button>
+      <button id="brush">Brush</button>
     </div>
     <script src="index.js"></script>
   </body>

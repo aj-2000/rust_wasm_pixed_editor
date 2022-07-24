@@ -1,10 +1,7 @@
+const CELL_SIZE = 50;
 function draw(state) {
-    const CELL_SIZE = 10;
   const canvas = document.getElementById("my-canvas");
   const context = canvas.getContext("2d");
-
-  // context.fillStyle = "red";
-  // context.fillRect(0, 0, 50, 50);
 
   context.strokeStyle = "black";
   context.lineWidth = 1;
@@ -14,7 +11,7 @@ function draw(state) {
   const height = image.height();
 
   const cells = image.cells();
-  const cellSize = 10;
+  const cellSize = CELL_SIZE;
 
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
@@ -42,20 +39,32 @@ function draw(state) {
   }
 }
 
+context.rect(
+  2 * mouseCoords.x - currentMouse.x,
+  2 * mouseCoords.y - currentMouse.y,
+  2 * (currentMouse.x - mouseCoords.x),
+  2 * (currentMouse.y - mouseCoords.y)
+);
+
 function setupCanvas(state) {
+  state.internal.penType = 'BRUSH';
   const canvas = document.getElementById("my-canvas");
 
   canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
     console.log(event);
-    const cellSize = 10;
+    const cellSize = CELL_SIZE;
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
 
     x = Math.floor(x / cellSize);
     y = Math.floor(y / cellSize);
 
-    state.internal.brush(x, y, state.currentColor);
+    if(state.internal.penType === 'BRUSH'){
+      state.internal.brush(x, y, state.currentColor);
+    } else if(state.internal.penType === 'ERASER'){
+      state.internal.eraser(x, y);
+    }
 
     draw(state);
   });
@@ -74,27 +83,41 @@ function setupCanvas(state) {
     if(!state.dragging) return;
 
     const rect = canvas.getBoundingClientRect();
-    const cellSize = 10;
+    const cellSize = CELL_SIZE;
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
 
     x = Math.floor(x / cellSize);
     y = Math.floor(y / cellSize);
 
-    state.internal.brush(x, y, state.currentColor);
+    if(state.internal.penType === 'BRUSH'){
+      state.internal.brush(x, y, state.currentColor);
+    } else if(state.internal.penType === 'ERASER'){
+      state.internal.eraser(x, y);
+    }
 
     draw(state);
   }); 
 
   document.getElementById("red").addEventListener("click", (event) => {
-    state.currentColor = [255, 200, 200];
+    state.currentColor = [255, 0, 0];
   });
   document.getElementById("green").addEventListener("click", (event) => {
-    state.currentColor = [200, 255, 200];
+    state.currentColor = [102, 187, 87];
   });
   document.getElementById("blue").addEventListener("click", (event) => {
-    state.currentColor = [200, 200, 255];
+    state.currentColor = [0, 0, 255];
   });
+  document.getElementById("orange").addEventListener("click", (event) => {
+    state.currentColor = [255, 153, 0];
+  });
+  document.getElementById("black").addEventListener("click", (event) => {
+    state.currentColor = [0, 0, 0];
+  });
+  document.getElementById("white").addEventListener("click", (event) => {
+    state.currentColor = [255, 255, 255];
+  });
+
 
   document.getElementById("undo").addEventListener("click", (event) => {
     state.internal.undo();
@@ -105,19 +128,42 @@ function setupCanvas(state) {
     state.internal.redo();
     draw(state);
   });
+
+  document.getElementById("eraser").addEventListener("click", (event) => {
+    state.internal.penType = 'ERASER';
+  });
+
+  document.getElementById("brush").addEventListener("click", (event) => {
+    state.internal.penType = 'BRUSH';
+  });
 }
 
 async function main() {
   const lib = await import("../pkg/index.js").catch(console.error);
   const internal = new lib.InternalState(100, 100);
-
+  // const PEN_TYPES = ['BRUSH', 'ERASER'];
   const state = {
     internal,
     currentColor: [200, 255, 200],
     dragging: false,
+    penType: 'BRUSH'
+
   };
   setupCanvas(state);
   draw(state);
 }
 
 main();
+
+// Eraser
+// Line Width
+// Position Indication
+// Color Indication
+// Open Image
+// Pen indicator
+// use screen space efficiently
+// Save as Image
+// save as paint file
+// Text / Numbers / Symbols
+// More Smooth
+// Color Picker

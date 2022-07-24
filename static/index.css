@@ -1,0 +1,51 @@
+body {
+    background-color: grey;
+}
+.btn-color-red {
+    width: 100px;
+    height: 50px;
+    border: none;
+    background-color: #FF0000;
+    font-weight: bolder;
+    color: white;
+}
+.btn-color-blue {
+    width: 100px;
+    height: 50px;
+    border: none;
+    background-color: #0000FF;
+    font-weight: bolder;
+    color: white;
+}
+.btn-color-green {
+    width: 100px;
+    height: 50px;
+    border: none;
+    background-color: #66BB55;
+    font-weight: bolder;
+    color: white;
+}
+.btn-color-orange {
+    width: 100px;
+    height: 50px;
+    border: none;
+    background-color: #FF9900;
+    font-weight: bolder;
+    color: white;
+}
+.btn-color-black {
+    width: 100px;
+    height: 50px;
+    border: none;
+    background-color: #000;
+    font-weight: bolder;
+    color: white;
+}
+.btn-color-white {
+    width: 100px;
+    height: 50px;
+    border: solid 1px black;
+    background-color: #FFF;
+    font-weight: bolder;
+    color: #000;
+}
