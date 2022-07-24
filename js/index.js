@@ -2,7 +2,6 @@ const CELL_SIZE = 50;
 function draw(state) {
   const canvas = document.getElementById("my-canvas");
   const context = canvas.getContext("2d");
-
   context.strokeStyle = "black";
   context.lineWidth = 1;
 
@@ -39,15 +38,8 @@ function draw(state) {
   }
 }
 
-context.rect(
-  2 * mouseCoords.x - currentMouse.x,
-  2 * mouseCoords.y - currentMouse.y,
-  2 * (currentMouse.x - mouseCoords.x),
-  2 * (currentMouse.y - mouseCoords.y)
-);
-
 function setupCanvas(state) {
-  state.internal.penType = 'BRUSH';
+  state.penType = "BRUSH";
   const canvas = document.getElementById("my-canvas");
 
   canvas.addEventListener("click", (event) => {
@@ -60,10 +52,12 @@ function setupCanvas(state) {
     x = Math.floor(x / cellSize);
     y = Math.floor(y / cellSize);
 
-    if(state.internal.penType === 'BRUSH'){
-      state.internal.brush(x, y, state.currentColor);
-    } else if(state.internal.penType === 'ERASER'){
+    if (state.penType === "BRUSH") {
+      state.internal.brush(x, y, state.currentColor, parseInt(state.size));
+    } else if (state.penType === "ERASER") {
       state.internal.eraser(x, y);
+    } else if(state.penType === "SYMBOLS") {
+      state.internal.draw_symbol(x, y, state.currentColor, parseInt(state.symbol));
     }
 
     draw(state);
@@ -80,7 +74,7 @@ function setupCanvas(state) {
   });
 
   canvas.addEventListener("mousemove", (event) => {
-    if(!state.dragging) return;
+    if (!state.dragging) return;
 
     const rect = canvas.getBoundingClientRect();
     const cellSize = CELL_SIZE;
@@ -90,15 +84,22 @@ function setupCanvas(state) {
     x = Math.floor(x / cellSize);
     y = Math.floor(y / cellSize);
 
-    if(state.internal.penType === 'BRUSH'){
-      state.internal.brush(x, y, state.currentColor);
-    } else if(state.internal.penType === 'ERASER'){
+    if (state.penType === "BRUSH") {
+      state.internal.brush(x, y, state.currentColor, parseInt(state.size));
+    } else if (state.penType === "ERASER") {
       state.internal.eraser(x, y);
+    } else if(state.penType === "SYMBOLS") {
+      state.internal.draw_symbol(x, y, state.currentColor, parseInt(state.symbol));
     }
 
     draw(state);
-  }); 
-
+  });
+  document.getElementById("size").addEventListener("change", (event) => {
+    state.size = event.target.value;
+  });
+  document.getElementById("symbols-select").addEventListener("change", (event) => {
+    state.symbol = event.target.value;
+  });
   document.getElementById("red").addEventListener("click", (event) => {
     state.currentColor = [255, 0, 0];
   });
@@ -118,7 +119,6 @@ function setupCanvas(state) {
     state.currentColor = [255, 255, 255];
   });
 
-
   document.getElementById("undo").addEventListener("click", (event) => {
     state.internal.undo();
     draw(state);
@@ -130,11 +130,20 @@ function setupCanvas(state) {
   });
 
   document.getElementById("eraser").addEventListener("click", (event) => {
-    state.internal.penType = 'ERASER';
+    state.penType = "ERASER";
   });
-
+  document.getElementById("symbols").addEventListener("click", (event) => {
+    state.penType = "SYMBOLS";
+  });
   document.getElementById("brush").addEventListener("click", (event) => {
-    state.internal.penType = 'BRUSH';
+    state.penType = "BRUSH";
+  });
+  document.getElementById("save-as-image").addEventListener("click", (el) => {
+    const canvas = document.getElementById("my-canvas");
+    var image = canvas
+      .toDataURL("image/png")
+      .replace("image/png", "image/octet-stream"); // here is the most important part because if you dont replace you will get a DOM 18 exception
+    window.location.href = image;
   });
 }
 
@@ -146,8 +155,9 @@ async function main() {
     internal,
     currentColor: [200, 255, 200],
     dragging: false,
-    penType: 'BRUSH'
-
+    penType: "BRUSH",
+    size: 1,
+    symbol: 65
   };
   setupCanvas(state);
   draw(state);
@@ -155,14 +165,14 @@ async function main() {
 
 main();
 
-// Eraser
-// Line Width
+// Eraser - box overlay
+// Line Width - cursors
 // Position Indication
 // Color Indication
 // Open Image
 // Pen indicator
 // use screen space efficiently
-// Save as Image
+// Save as Image - meaningful name
 // save as paint file
 // Text / Numbers / Symbols
 // More Smooth

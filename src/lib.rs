@@ -1,6 +1,6 @@
+use im_rc::Vector;
+use std::collections::HashMap;
 use std::iter::FromIterator;
-
-use im::Vector;
 use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wee_alloc")]
@@ -53,25 +53,42 @@ impl Image {
         self.height
     }
 
-    pub fn brush(&mut self, x: usize, y: usize, color: Vec<u8>) -> Option<Image> {
-        let index = (y * self.width) + x;
+    pub fn brush(&mut self, x: usize, y: usize, color: Vec<u8>, size: usize) -> Option<Image> {
+        let cells_to_erase = [
+            (x, y),
+            (x + 1, y),
+            (x, y + 1),
+            (x + 1, y + 1),
+            (x - 1, y - 1),
+            (x - 1, y + 1),
+            (x + 1, y - 1),
+            (x, y + 1),
+            (x - 1, y),
+            (x, y - 1),
+        ];
+
+        let mut new_image = self.cells.clone();
         let color = Rgb {
             r: color[0],
             g: color[1],
             b: color[2],
         };
-        if self.cells[index] == color {
-            None
-        } else {
-            let new_cells = self.cells.update(index, color);
-            Some(Image {
-                width: self.width,
-                height: self.height,
-                cells: new_cells,
-            })
-
-            // vec![u8] = {};
+        for i in 0..size {
+            if cells_to_erase[i].0 >= 0 as usize
+                && cells_to_erase[i].1 >= 0 as usize
+                && cells_to_erase[i].0 <= self.width - 1
+                && cells_to_erase[i].1 <= self.height - 1
+            {
+                let index = (cells_to_erase[i].1 * self.width) + cells_to_erase[i].0;
+                new_image[index] = color;
+            }
         }
+
+        Some(Image {
+            width: self.width,
+            height: self.height,
+            cells: new_image,
+        })
     }
 
     pub fn eraser(&mut self, x: usize, y: usize) -> Option<Image> {
@@ -90,7 +107,11 @@ impl Image {
 
         let size = cells_to_erase.len();
         let mut new_image = self.cells.clone();
-        let color = Rgb { r: 255, g: 255, b: 255 };
+        let color = Rgb {
+            r: 255,
+            g: 255,
+            b: 255,
+        };
 
         for i in 0..(size) {
             if cells_to_erase[i].0 >= 0 as usize
@@ -103,6 +124,88 @@ impl Image {
             }
         }
 
+        Some(Image {
+            width: self.width,
+            height: self.height,
+            cells: new_image,
+        })
+    }
+
+    pub fn draw_symbol(
+        &mut self,
+        x: usize,
+        y: usize,
+        color: Vec<u8>,
+        symbol: usize,
+    ) -> Option<Image> {
+        let mut symbols = HashMap::new();
+
+        symbols.insert(
+            65 as usize,
+            vec![
+                (x + 0, y + 0),
+                (x - 1, y + 1),
+                (x + 1, y + 1),
+                (x - 1, y + 2),
+                (x + 1, y + 2),
+                (x - 1, y + 3),
+                (x + 1, y + 3),
+                (x + 0, y + 2),
+            ],
+        );
+        symbols.insert(
+            67,
+            vec![
+                (x + 0, y + 0),
+                (x - 1, y + 0),
+                (x - 2, y + 1),
+                (x - 2, y + 2),
+                (x - 1, y + 3),
+                (x + 0, y + 3),
+            ],
+        );
+        symbols.insert(
+            74,
+            vec![
+                (x + 0, y + 0),
+                (x + 1, y + 0),
+                (x + 2, y + 0),
+                (x + 1, y + 1),
+                (x + 1, y + 2),
+                (x + 1, y + 3),
+                (x, y + 3),
+                (x + 1, y + 2),
+            ],
+        );
+        symbols.insert(
+            89,
+            vec![
+                (x + 0, y + 0),
+                (x + 2, y + 0),
+                (x + 0, y + 1),
+                (x + 2, y + 1),
+                (x + 1, y + 2),
+                (x + 1, y + 3),
+            ],
+        );
+
+        let cells_to_paint = symbols[&symbol].clone();
+        let mut new_image = self.cells.clone();
+        let color = Rgb {
+            r: color[0],
+            g: color[1],
+            b: color[2],
+        };
+        for i in 0..cells_to_paint.len() {
+            if cells_to_paint[i].0 >= 0 as usize
+                && cells_to_paint[i].1 >= 0 as usize
+                && cells_to_paint[i].0 <= self.width - 1
+                && cells_to_paint[i].1 <= self.height - 1
+            {
+                let index = (cells_to_paint[i].1 * self.width) + cells_to_paint[i].0;
+                new_image[index] = color;
+            }
+        }
         Some(Image {
             width: self.width,
             height: self.height,
@@ -207,9 +310,9 @@ impl InternalState {
         self.undo_queue.redo();
     }
 
-    pub fn brush(&mut self, x: usize, y: usize, color: Vec<u8>) {
+    pub fn brush(&mut self, x: usize, y: usize, color: Vec<u8>, _size: usize) {
         let mut image = self.undo_queue.current();
-        let optional_image = image.brush(x, y, color);
+        let optional_image = image.brush(x, y, color, 1);
         match optional_image {
             None => (),
             Some(new_image) => {
@@ -221,6 +324,17 @@ impl InternalState {
     pub fn eraser(&mut self, x: usize, y: usize) {
         let mut image = self.undo_queue.current();
         let optional_image = image.eraser(x, y);
+        match optional_image {
+            None => (),
+            Some(new_image) => {
+                self.undo_queue.push(new_image);
+            }
+        }
+    }
+
+    pub fn draw_symbol(&mut self, x: usize, y: usize, color: Vec<u8>, symbol: usize) {
+        let mut image = self.undo_queue.current();
+        let optional_image = image.draw_symbol(x, y, color, symbol);
         match optional_image {
             None => (),
             Some(new_image) => {
